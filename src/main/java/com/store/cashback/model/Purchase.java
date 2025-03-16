@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 public class Purchase{
     @Id
-    @GenertaedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
@@ -20,4 +20,52 @@ public class Purchase{
 
     @Enumerated(EnumType.STRING)
     private PurchaseCategory category;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public LocalDateTime getPurchaseDate() {
+        return purchaseDate;
+    }
+
+    public void setPurchaseDate(LocalDateTime purchaseDate) {
+        this.purchaseDate = purchaseDate;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public String getStoreLocation() {
+        return storeLocation;
+    }
+
+    public void setStoreLocation(String storeLocation) {
+        this.storeLocation = storeLocation;
+    }
+
+    public PurchaseCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(PurchaseCategory category) {
+        this.category = category;
+    }
 }

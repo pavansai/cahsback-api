@@ -11,6 +11,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service responsible for determining which users are eligible for which cashback offers.
+ * This service implements business rules for cashback eligibility including:
+ * - User account status
+ * - Purchase history requirements
+ * - Loyalty tier requirements
+ * - Purchase category requirements
+ */
 @Service
 public class CashbackEligibilityService {
 
@@ -25,6 +33,8 @@ public class CashbackEligibilityService {
 
     /**
      * Find all users eligible for any active cashback offers.
+     *
+     * @return List of eligible users with their matching offers
      */
     public List<UserEligibilityDTO> findEligibleUsers() {
         // Get active users
@@ -40,16 +50,18 @@ public class CashbackEligibilityService {
         List<UserEligibilityDTO> eligibleUsers = new ArrayList<>();
 
         for (User user : activeUsers) {
+            // Keep track of offers this user is eligible for
             List<CashbackOfferDTO> eligibleOffers = new ArrayList<>();
 
             // Check each offer for eligibility
             for (CashBackOffer offer : activeOffers) {
+                // If user is eligible for this offer, add it to their list
                 if (isUserEligibleForOffer(user, offer, threeMonthsAgo)) {
                     eligibleOffers.add(convertToDTO(offer));
                 }
             }
 
-            // If user is eligible for any offers, add to results
+            // If user is eligible for any offers, create a DTO and add to results
             if (!eligibleOffers.isEmpty()) {
                 UserEligibilityDTO userDTO = new UserEligibilityDTO();
                 userDTO.setUserId(user.getId());
@@ -67,6 +79,11 @@ public class CashbackEligibilityService {
 
     /**
      * Determine if a specific user is eligible for a specific offer.
+     *
+     * @param user The user to check eligibility for
+     * @param offer The cashback offer to check against
+     * @param threeMonthsAgo The cutoff date for recent purchases
+     * @return true if the user is eligible for the offer, false otherwise
      */
     private boolean isUserEligibleForOffer(User user, CashBackOffer offer, LocalDateTime threeMonthsAgo) {
         // Check if offer is active and not expired
@@ -88,31 +105,48 @@ public class CashbackEligibilityService {
         Double totalPurchases = purchaseRepository.sumPurchaseAmountByUserIdAndPurchaseDateAfter(
                 user.getId(), threeMonthsAgo);
 
+        // If totalPurchases is null (no purchases) or below the minimum, user is not eligible
         if (totalPurchases == null || totalPurchases < offer.getMinimumPurchaseAmount()) {
             return false;
         }
 
         // Check for purchase category requirements if any
         if (!offer.getEligibleCategories().isEmpty()) {
-            boolean hasPurchaseInEligibleCategory = user.getPurchases().stream()
-                    .filter(p -> p.getPurchaseDate().isAfter(threeMonthsAgo))
-                    .anyMatch(p -> offer.getEligibleCategories().contains(p.getCategory()));
+            // Traditional approach instead of streams
+            boolean hasPurchaseInEligibleCategory = false;
 
+            // Loop through all the user's purchases
+            for (Purchase purchase : user.getPurchases()) {
+                // Only consider recent purchases (within last 3 months)
+                if (purchase.getPurchaseDate().isAfter(threeMonthsAgo)) {
+                    // Check if this purchase's category is eligible for the offer
+                    if (offer.getEligibleCategories().contains(purchase.getCategory())) {
+                        // Found an eligible purchase, no need to check further
+                        hasPurchaseInEligibleCategory = true;
+                        break;
+                    }
+                }
+            }
+
+            // If no eligible purchase was found, user doesn't qualify
             if (!hasPurchaseInEligibleCategory) {
                 return false;
             }
         }
 
-        // User is eligible for this offer
+        // If we've passed all checks, user is eligible for this offer
         return true;
     }
 
     /**
      * Convert a CashbackOffer entity to its DTO representation.
+     *
+     * @param offer The entity to convert
+     * @return The equivalent DTO object
      */
     private CashbackOfferDTO convertToDTO(CashBackOffer offer) {
         CashbackOfferDTO dto = new CashbackOfferDTO();
-        dto.wait(offer.getId());
+        dto.setId(offer.getId());  // Fixed from dto.wait(offer.getId())
         dto.setName(offer.getName());
         dto.setDescription(offer.getDescription());
         dto.setCashbackPercentage(offer.getCashbackPercentage());
