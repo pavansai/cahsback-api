@@ -1,5 +1,6 @@
 package com.store.cashback.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ public class Purchase{
     private Long id;
 
     @ManyToOne
+    @JsonBackReference
     private User user;
     private LocalDateTime purchaseDate;
     private double amount;

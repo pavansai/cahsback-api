@@ -1,6 +1,8 @@
 // User.java
 package com.store.cashback.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -24,6 +26,7 @@ public class User {
     private LoyaltyTier loyaltyTier;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Purchase> purchases = new ArrayList<>();
 
     public Long getId() {
@@ -96,5 +99,6 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "offer_id")
     )
+    @JsonIgnoreProperties("users")
     private List<CashBackOffer> claimedOffers = new ArrayList<>();
 }
